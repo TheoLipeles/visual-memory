@@ -1,0 +1,8 @@
+{
+    "glsl-canvas.uniforms": {
+        "u_memscale": 0.5
+    },
+    "webgl-glsl-editor.format.placeBracesOnSeparateLine": true,
+    "glsl-canvas.extensions": [],
+    "glsl-canvas.useFormatter": true
+}
