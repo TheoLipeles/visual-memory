@@ -15,10 +15,10 @@ uniform float u_memscale;
 
 // Definitions
 
-#define uv gl_FragCoord.xy/u_resolution.xy
 #define MemHeight u_resolution.y/log(u_resolution.y)
-#define NeighborCount 3
+#define NeighborCount 4
 #define PI 3.14159265
+#define uv (gl_FragCoord.xy/u_resolution.xy)
 #if defined(BUFFER_0)
 #endif
 
@@ -68,11 +68,6 @@ vec4 getRelPixel(vec2 rel_loc)
     return texture2D(u_buffer0, (uv + rel_loc.xy/(u_resolution - vec2(0.,MemHeight))));
 }
 
-bool isOrg(vec4 pixel)
-{
-    return pixel.a >= 0.5;
-}
-
 vec4 memory()
 {
     return randomColor(uv);
@@ -110,10 +105,16 @@ Dna getDna(vec2 loc)
 
 }
 
+bool isOrg(vec4 pixel)
+{
+    Dna dna = getDna(getDnaLoc(pixel));
+    return (all(lessThan(abs(pixel - dna.divisionCondition), dna.divisionMargin)));
+}
+
 vec4 emptySpace(vec4 pixel)
 {
     vec4 sum = pixel.rgba;
-    if(length(pixel) <= pixel.a)
+    if(length(pixel) <= 1.)
         return randomColor(gl_FragCoord.xy);
     float angle;
     vec4 neighbor;
@@ -128,11 +129,21 @@ vec4 emptySpace(vec4 pixel)
             Dna dna = getDna(getDnaLoc(neighbor));
             if(all(lessThan(abs(neighbor - dna.divisionCondition), dna.divisionMargin)))
             {
-                return pixel.rgba * neighbor.rgba;
+                minNeighbor = mix(
+                    minNeighbor, neighbor,
+                    step(
+                        distance(minNeighbor, pixel),
+                        distance(neighbor, pixel)
+                    ));
             }
         }
     }
-    return sum / float(NeighborCount+1);
+    if (length(minNeighbor) != length(vec4( 1.0))) {
+        return minNeighbor;
+    } else {
+        return sum / float(NeighborCount+1);
+
+    }
 }
 
 vec4 organism(vec4 pixel) {
@@ -142,7 +153,7 @@ vec4 organism(vec4 pixel) {
     sum += getRelPixel(dna.sample1) * dna.sampleMod;
     sum += getRelPixel(dna.sample2) * dna.sampleMod;
     sum += getRelPixel(dna.sample3) * dna.sampleMod;
-    return sum-dna.waste;
+    return sum-dna.waste*2.;
 }
 
 void main()
@@ -150,12 +161,7 @@ void main()
     vec4 color = getPixel(uv);
     if(gl_FragCoord.y > u_memscale * MemHeight)
     {
-        if (isOrg(color))
-        {
-            color = organism(color);
-        } else {
-            color = emptySpace(color);
-        }
+        color = (isOrg(color) ? organism(color) : emptySpace(color));
     }
     else
     {
