@@ -16,7 +16,7 @@ uniform float u_memscale;
 // Definitions
 
 #define MemHeight u_resolution.y/log(u_resolution.y)
-#define NeighborCount 4
+#define NeighborCount 3
 #define PI 3.14159265
 #define uv (gl_FragCoord.xy/u_resolution.xy)
 #if defined(BUFFER_0)
@@ -68,11 +68,6 @@ vec4 getRelPixel(vec2 rel_loc)
     return texture2D(u_buffer0, (uv + rel_loc.xy/(u_resolution - vec2(0.,MemHeight))));
 }
 
-vec4 memory()
-{
-    return randomColor(uv);
-}
-
 vec4 getMem(vec2 loc)
 {
     return getPixel(vec2(loc.x, MemHeight * loc.y));
@@ -107,8 +102,20 @@ Dna getDna(vec2 loc)
 
 bool isOrg(vec4 pixel)
 {
+    if (length(pixel) < 0.5) return bool(0);
     Dna dna = getDna(getDnaLoc(pixel));
     return (all(lessThan(abs(pixel - dna.divisionCondition), dna.divisionMargin)));
+}
+
+// Pixel operations
+
+vec4 memory(vec4 pixel)
+{
+    float isDna = float(isOrg(getMem(gl_FragCoord.xy)));
+    // for (int i = 0; i > -4; i--) {
+    //     isDna += float(isOrg(getMem(memLocAdd(gl_FragCoord.xy / vec2(1., MemHeight), i))));
+    // }
+    return mix(randomColor(gl_FragCoord.xy+sin(u_time)), pixel, step(0.5,isDna));
 }
 
 vec4 emptySpace(vec4 pixel)
@@ -127,7 +134,7 @@ vec4 emptySpace(vec4 pixel)
         if(isOrg(neighbor))
         {
             Dna dna = getDna(getDnaLoc(neighbor));
-            if(all(lessThan(abs(neighbor - dna.divisionCondition), dna.divisionMargin)))
+            if(all(lessThan(abs(pixel*neighbor - dna.divisionCondition), dna.divisionMargin)))
             {
                 minNeighbor = mix(
                     minNeighbor, neighbor,
@@ -165,7 +172,7 @@ void main()
     }
     else
     {
-        color = memory();
+        color = memory(color);
     }
     gl_FragColor = color;
 }
