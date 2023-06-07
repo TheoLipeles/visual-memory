@@ -159,7 +159,7 @@ vec4 organism(vec4 pixel) {
 void main()
 {
     vec4 color = getPixel(uv);
-    if(gl_FragCoord.y > u_memscale * MemHeight)
+    if(gl_FragCoord.y < u_resolution.y-(u_memscale * MemHeight))
     {
         color = (isOrg(color) ? organism(color) : emptySpace(color));
     }
