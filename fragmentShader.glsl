@@ -111,11 +111,13 @@ bool isOrg(vec4 pixel)
 
 vec4 memory(vec4 pixel)
 {
-    float isDna = float(isOrg(getMem(gl_FragCoord.xy)));
-    // for (int i = 0; i > -4; i--) {
-    //     isDna += float(isOrg(getMem(memLocAdd(gl_FragCoord.xy / vec2(1., MemHeight), i))));
-    // }
-    return mix(randomColor(gl_FragCoord.xy+sin(u_time)), pixel, step(0.5,isDna));
+
+    vec2 st = gl_FragCoord.xy/u_resolution.xy;
+    float dist = distance(st, vec2(0.,1.));
+    vec3 c1 = vec3(1.0, 0.0, 0.0);
+    vec3 c2 = vec3(0.0941, 0.7176, 0.5922);
+    vec4 gradient = vec4(mix(c1,c2,dist), dist);
+    return gradient;
 }
 
 vec4 emptySpace(vec4 pixel)
