@@ -16,7 +16,7 @@ uniform float u_memscale;
 // Definitions
 
 #define MemHeight u_resolution.y/log(u_resolution.y)
-#define NeighborCount 3
+#define NeighborCount 9
 #define PI 3.14159265
 #define uv (gl_FragCoord.xy/u_resolution.xy)
 #if defined(BUFFER_0)
@@ -57,6 +57,12 @@ vec2 AtoXY(float r)
 float XYtoA(vec2 xy)
 {
     return atan(xy.y, xy.x);
+}
+
+// cosine based palette, 4 vec3 params
+vec3 palette( in float t, in vec3 a, in vec3 b, in vec3 c, in vec3 d )
+{
+    return a + b*cos( 6.28318*(c*t+d) );
 }
 
 vec4 getPixel(vec2 loc)
@@ -113,11 +119,13 @@ vec4 memory(vec4 pixel)
 {
 
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
-    float dist = distance(st, vec2(0.,1.));
-    vec3 c1 = vec3(1.0, 0.0, 0.0);
-    vec3 c2 = vec3(0.0941, 0.7176, 0.5922);
-    vec4 gradient = vec4(mix(c1,c2,dist), dist);
-    return gradient;
+    float dist = distance(st, vec2(0.,0.8));
+    vec3 c1 = vec3(0.5,0.4,0.5);
+    vec3 c2 = vec3(0.5,0.5,0.3);
+    vec3 c3 = vec3(0.76, 1.0, 0.01);
+    vec3 c4 = vec3(0.4353, 0.7176, 0.0941);
+    vec3 gradient = palette(dist, c1, c2, c3, c4);
+    return vec4(gradient, dist);
 }
 
 vec4 emptySpace(vec4 pixel)
