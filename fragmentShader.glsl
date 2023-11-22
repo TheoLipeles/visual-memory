@@ -76,7 +76,7 @@ vec4 getRelPixel(vec2 rel_loc)
 
 vec4 getMem(vec2 loc)
 {
-    return getPixel(vec2(clamp(0.0, u_resolution.x-6.0, loc.x*u_resolution.x), MemHeight * loc.y));
+    return getPixel(vec2(clamp(loc.x*u_resolution.x, 0.0, u_resolution.x-6.0), clamp(MemHeight * loc.y, 0.0,MemHeight)));
 }
 
 vec2 memLocAdd(vec2 loc, int i)
@@ -110,7 +110,7 @@ bool isOrg(vec4 pixel)
 {
     if (length(pixel) < 0.5) return bool(0);
     Dna dna = getDna(getDnaLoc(pixel));
-    return (all(lessThan(abs(pixel - dna.divisionCondition), dna.divisionMargin)));
+    return (length(abs(pixel - dna.divisionCondition)) < length(dna.divisionMargin));
 }
 
 // Pixel operations
@@ -140,7 +140,7 @@ vec4 emptySpace(vec4 pixel)
     angle = (pdna.sampleMod.x / float(NeighborCount)) *2.0* PI;
     angle = (angle+XYtoA(pdna.sample2)-XYtoA(pdna.sample3))*XYtoA(pdna.sample0)/XYtoA(pdna.sample1)*2.0*PI;
     angle /= radians(length(sum));
-    neighbor = getRelPixel(AtoXY(angle)*length(pdna.sample3)*sqrt(2.));
+    neighbor = getRelPixel(AtoXY(angle)*(length(pdna.sample3/pdna.sample2))*sqrt(2.));
     sum += neighbor.rgba;
     return sum / 2.0;
 }
@@ -152,7 +152,7 @@ vec4 organism(vec4 pixel) {
     sum += getRelPixel(dna.sample1) * dna.sampleMod;
     sum += getRelPixel(dna.sample2) * dna.sampleMod;
     sum += getRelPixel(dna.sample3) * dna.sampleMod;
-    return sum-dna.waste*2.0;
+    return sum-max(dna.waste*2.0, dna.sampleMod*dna.waste);
 }
 
 void main()
