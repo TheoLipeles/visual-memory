@@ -16,7 +16,7 @@ uniform float u_memscale;
 // Definitions
 
 #define MemHeight u_resolution.y/log(u_resolution.y)
-#define NeighborCount 9
+#define NeighborCount 1
 #define PI 3.14159265
 #define uv (gl_FragCoord.xy/u_resolution.xy)
 #if defined(BUFFER_0)
@@ -131,6 +131,7 @@ vec4 memory(vec4 pixel)
 vec4 emptySpace(vec4 pixel)
 {
     vec4 sum = pixel.rgba;
+    Dna pdna = getDna(getDnaLoc(pixel));
     if(length(pixel) <= 1.)
         return randomColor(gl_FragCoord.xy);
     float angle;
@@ -138,8 +139,9 @@ vec4 emptySpace(vec4 pixel)
     vec4 minNeighbor = vec4(1.0);
     for(int i = 0; i < NeighborCount; i++)
     {
-        angle = (float(i) / float(NeighborCount)) * 2. * PI;
-        neighbor = getRelPixel(AtoXY(angle)*sqrt(2.));
+        angle = (float(i)*pdna.sampleMod.x / float(NeighborCount)) * 2. * PI;
+        angle = (angle+XYtoA(pdna.sample2)-XYtoA(pdna.sample3))*XYtoA(pdna.sample0)/XYtoA(pdna.sample1)*2.0*PI;
+        neighbor = getRelPixel(AtoXY(angle)*length(pdna.sample3)*sqrt(2.));
         sum += neighbor.rgba;
         if(isOrg(neighbor))
         {
