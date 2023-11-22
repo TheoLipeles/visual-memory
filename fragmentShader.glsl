@@ -15,7 +15,7 @@ uniform float u_memscale;
 
 // Definitions
 
-#define MemHeight u_resolution.y/log(u_resolution.y)
+#define MemHeight u_resolution.y/log(length(u_resolution))
 #define NeighborCount 1
 #define PI 3.14159265
 #define uv (gl_FragCoord.xy/u_resolution.xy)
@@ -76,7 +76,7 @@ vec4 getRelPixel(vec2 rel_loc)
 
 vec4 getMem(vec2 loc)
 {
-    return getPixel(vec2(loc.x, MemHeight * loc.y));
+    return getPixel(vec2(clamp(0.0, u_resolution.x-6.0, loc.x*u_resolution.x), MemHeight * loc.y));
 }
 
 vec2 memLocAdd(vec2 loc, int i)
@@ -117,8 +117,8 @@ bool isOrg(vec4 pixel)
 
 vec4 memory(vec4 pixel)
 {
-
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
+    return randomColor(st);
     float dist = distance(st, vec2(0.,0.8));
     vec3 c1 = vec3(0.5,0.4,0.5);
     vec3 c2 = vec3(0.5,0.5,0.3);
@@ -132,37 +132,17 @@ vec4 emptySpace(vec4 pixel)
 {
     vec4 sum = pixel.rgba;
     Dna pdna = getDna(getDnaLoc(pixel));
-    if(length(pixel) <= 1.)
+    if(length(pixel) <= length(pdna.waste-pdna.sampleMod))
         return randomColor(gl_FragCoord.xy);
     float angle;
     vec4 neighbor;
     vec4 minNeighbor = vec4(1.0);
-    for(int i = 0; i < NeighborCount; i++)
-    {
-        angle = (float(i)*pdna.sampleMod.x / float(NeighborCount)) * 2. * PI;
-        angle = (angle+XYtoA(pdna.sample2)-XYtoA(pdna.sample3))*XYtoA(pdna.sample0)/XYtoA(pdna.sample1)*2.0*PI;
-        neighbor = getRelPixel(AtoXY(angle)*length(pdna.sample3)*sqrt(2.));
-        sum += neighbor.rgba;
-        if(isOrg(neighbor))
-        {
-            Dna dna = getDna(getDnaLoc(neighbor));
-            if(all(lessThan(abs(pixel*neighbor - dna.divisionCondition), dna.divisionMargin)))
-            {
-                minNeighbor = mix(
-                    minNeighbor, neighbor,
-                    step(
-                        distance(minNeighbor, pixel),
-                        distance(neighbor, pixel)
-                    ));
-            }
-        }
-    }
-    if (length(minNeighbor) != length(vec4( 1.0))) {
-        return minNeighbor;
-    } else {
-        return sum / float(NeighborCount+1);
-
-    }
+    angle = (pdna.sampleMod.x / float(NeighborCount)) *2.0* PI;
+    angle = (angle+XYtoA(pdna.sample2)-XYtoA(pdna.sample3))*XYtoA(pdna.sample0)/XYtoA(pdna.sample1)*2.0*PI;
+    angle /= radians(length(sum));
+    neighbor = getRelPixel(AtoXY(angle)*length(pdna.sample3)*sqrt(2.));
+    sum += neighbor.rgba;
+    return sum / 2.0;
 }
 
 vec4 organism(vec4 pixel) {
@@ -172,7 +152,7 @@ vec4 organism(vec4 pixel) {
     sum += getRelPixel(dna.sample1) * dna.sampleMod;
     sum += getRelPixel(dna.sample2) * dna.sampleMod;
     sum += getRelPixel(dna.sample3) * dna.sampleMod;
-    return sum-dna.waste*2.;
+    return sum-dna.waste*2.0;
 }
 
 void main()
