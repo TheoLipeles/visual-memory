@@ -130,7 +130,7 @@ vec4 memory(vec4 pixel)
 
 float spinMod(float angle, vec4 color, Dna dna) {
     angle = (angle)*2.0*PI;
-    angle /= radians(length(pow(color, dna.waste)));
+    angle /= radians(length((color* min(dna.waste,dna.sampleMod)*2.0)));
     return angle;
 }
 
