@@ -15,7 +15,7 @@ uniform float u_memscale;
 
 // Definitions
 
-#define MemHeight u_resolution.y/log(length(u_resolution))
+#define MemHeight 20.0
 #define NeighborCount 1
 #define PI 3.14159265
 #define uv (gl_FragCoord.xy/u_resolution.xy)
@@ -76,7 +76,7 @@ vec4 getRelPixel(vec2 rel_loc)
 
 vec4 getMem(vec2 loc)
 {
-    return getPixel(vec2(clamp(loc.x*u_resolution.x, 0.0, u_resolution.x-6.0), clamp(MemHeight * loc.y, 0.0,MemHeight)));
+    return getPixel(normalize(loc)*u_resolution);
 }
 
 vec2 memLocAdd(vec2 loc, int i)
@@ -86,7 +86,7 @@ vec2 memLocAdd(vec2 loc, int i)
 
 vec2 getDnaLoc(vec4 org)
 {
-    vec2 dnaLoc = org.rg;
+    vec2 dnaLoc = abs(vec2(cos(org.r)-sin(org.g), sin(org.b)-cos(org.a)));
     return dnaLoc;
 }
 
