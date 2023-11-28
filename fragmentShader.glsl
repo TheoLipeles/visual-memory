@@ -86,7 +86,7 @@ vec2 memLocAdd(vec2 loc, int i)
 
 vec2 getDnaLoc(vec4 org)
 {
-    vec2 dnaLoc = abs(vec2(cos(org.r)-sin(org.g), sin(org.b)-cos(org.a)));
+    vec2 dnaLoc = pow(vec2(cos(org.r)-sin(org.g), sin(org.b)-cos(org.a)), sin(org.ga));
     return dnaLoc;
 }
 
@@ -128,6 +128,12 @@ vec4 memory(vec4 pixel)
     return vec4(gradient, dist);
 }
 
+float spinMod(float angle, vec4 color, Dna dna) {
+    angle = (angle)*2.0*PI;
+    angle /= radians(length(pow(color, dna.waste)));
+    return angle;
+}
+
 vec4 emptySpace(vec4 pixel)
 {
     vec4 sum = pixel.rgba;
@@ -138,8 +144,7 @@ vec4 emptySpace(vec4 pixel)
     vec4 neighbor;
     vec4 minNeighbor = vec4(1.0);
     angle = (pdna.sampleMod.x / float(NeighborCount)) *2.0* PI;
-    angle = (angle+XYtoA(pdna.sample2)-XYtoA(pdna.sample3))*XYtoA(pdna.sample0)/XYtoA(pdna.sample1)*2.0*PI;
-    angle /= radians(length(sum));
+    angle = spinMod(angle, sum, pdna);
     neighbor = getRelPixel(AtoXY(angle)*(length(pdna.sample3/pdna.sample2))*sqrt(2.));
     sum += neighbor.rgba;
     return sum / 2.0;
