@@ -160,14 +160,21 @@ vec4 organism(vec4 pixel) {
 
 void main()
 {
+    float mh = MemHeight/u_resolution.y;
     vec4 color = getPixel(uv);
-    if(gl_FragCoord.y < u_resolution.y-(u_memscale * MemHeight))
-    {
-        color = (isOrg(color) ? organism(color) : emptySpace(color));
-    }
-    else
-    {
-        color = memory(color);
-    }
+    vec4 orgColor = organism(color);
+    vec4 spaceColor = mix(emptySpace(color), memory(color), 0.01);
+    color = mix(spaceColor, orgColor, float(isOrg(color)));
+    float stepper = step(1.0-mh, uv.y);
+    color = mix(color,spaceColor, stepper);
+    // if(uv.y < 0.9)
+    // // if(gl_FragCoord.y < u_resolution.y-(u_memscale * MemHeight))
+    // {
+    //     color = mix(spaceColor, orgColor, float(isOrg(color)));
+    // }
+    // else
+    // {
+    //     color = emptySpace(color);
+    // }
     gl_FragColor = color;
 }
