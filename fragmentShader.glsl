@@ -108,9 +108,12 @@ Dna getDna(vec2 loc)
 
 bool isOrg(vec4 pixel)
 {
-    if (length(pixel) < 0.5) return bool(0);
     Dna dna = getDna(getDnaLoc(pixel));
-    return (length(abs(pixel - dna.divisionCondition)) < length(dna.divisionMargin));
+    float a = step(0.5,length(pixel));
+    float b = step(
+        length(pixel - dna.divisionCondition),
+        length(dna.divisionMargin));
+    return bool(step(1.5,a+b));
 }
 
 // Pixel operations
